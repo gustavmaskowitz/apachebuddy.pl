@@ -1006,6 +1006,7 @@ else {
 
 	# determine what the max clients setting is 
 	my $maxclients = find_master_value(\@config_array, $model, 'maxclients');
+	$maxclients = 256 if($maxclients eq 'CONFIG NOT FOUND');
 	print "Your max clients setting is ".$maxclients."\n";
 
 	#calculate ThreadsPerChild. This is useful for the worker MPM calculations

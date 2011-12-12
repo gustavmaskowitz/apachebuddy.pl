@@ -81,6 +81,12 @@ sub find_included_files {
 		
 		print "VERBOSE: Processing ".$file."\n" if $main::VERBOSE;
 
+		if(-d $file && $file !~ /\*$/) {
+			print "VERBOSE: Adding glob to ".$file.", is a directory\n" if $main::VERBOSE;
+			$file .= "/" if($file !~ /\/$/);
+			$file .= "*";
+		}
+
 		# open the file
 		open(FILE,$file) || die("Unable to open file: ".$file."\n");
 		

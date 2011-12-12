@@ -106,42 +106,41 @@ sub find_included_files {
 			# lines found
 			# my @new_includes; 
 
-			# if the file doesn't start with a comment, then we want to examine it
-			if ( $_ !~ m/^\s*#/ ) {
-				# find lines that include other files
-				if ( $_ =~ m/\s*include\s+/i ) {
+			# if the line looks like an include, then we want to examine it
+			if ( $_ =~ m/^\s*include/i ) {
+				# grab the included file name or file glob
+				$_ =~ s/\s*include\s+(.+)\s*/$1/i;
 
-					# grab the included file name or file glob
-					$_ =~ s/\s*include\s+(.*)\s*/$1/i;
+				# strip out any quoting
+				$_ =~ s/['"]+//g;
 
-					# prepend the Apache root for files or
-					# globs that are relative
-					if ( $_ !~ m/^\// ) {
-						$_ = $apache_root."/".$_;
-					}
-
-					# check for file globbing
-					if ( $_ =~ m/.*\*.*/ ) {
-						my $glob = $_;
-						my @include_files;
-						chomp($glob);
-
-						# if the include is a file glob,
-						# expand it and add the files
-						# to the list
-						my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
-						push(@$master_list,@new_includes);
-						push(@$find_includes_in,@new_includes);
-					}
-					else {
-						# if it is not a glob, push the 
-						# line into the configuration 
-						# array
-						push(@$master_list,$_);
-						push(@$find_includes_in,$_);
-					}
+				# prepend the Apache root for files or
+				# globs that are relative
+				if ( $_ !~ m/^\// ) {
+					$_ = $apache_root."/".$_;
 				}
-			}	
+
+				# check for file globbing
+				if ( $_ =~ m/.*\*.*/ ) {
+					my $glob = $_;
+					my @include_files;
+					chomp($glob);
+
+					# if the include is a file glob,
+					# expand it and add the files
+					# to the list
+					my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
+					push(@$master_list,@new_includes);
+					push(@$find_includes_in,@new_includes);
+				}
+				else {
+					# if it is not a glob, push the 
+					# line into the configuration 
+					# array
+					push(@$master_list,$_);
+					push(@$find_includes_in,$_);
+				}
+			}
 		}
 		# trim the first entry off the array now that we have 
 		# processed it

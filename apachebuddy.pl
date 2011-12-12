@@ -159,7 +159,7 @@ sub expand_included_files {
 	my ($include_files, $glob, $apache_root) = @_;
 
 	# use a call to ls to get a list of the files from the glob
-	my @files = `ls $glob`;
+	my @files = `ls $glob 2> /dev/null`;
 
 	# add the files from the glob to the array we're going to pass back
 	foreach(@files) {

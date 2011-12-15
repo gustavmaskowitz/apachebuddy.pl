@@ -81,6 +81,12 @@ sub find_included_files {
 		
 		print "VERBOSE: Processing ".$file."\n" if $main::VERBOSE;
 
+		if(-d $file && $file !~ /\*$/) {
+			print "VERBOSE: Adding glob to ".$file.", is a directory\n" if $main::VERBOSE;
+			$file .= "/" if($file !~ /\/$/);
+			$file .= "*";
+		}
+
 		# open the file
 		open(FILE,$file) || die("Unable to open file: ".$file."\n");
 		
@@ -100,42 +106,41 @@ sub find_included_files {
 			# lines found
 			# my @new_includes; 
 
-			# if the file doesn't start with a comment, then we want to examine it
-			if ( $_ !~ m/^\s*#/ ) {
-				# find lines that include other files
-				if ( $_ =~ m/\s*include\s+/i ) {
+			# if the line looks like an include, then we want to examine it
+			if ( $_ =~ m/^\s*include/i ) {
+				# grab the included file name or file glob
+				$_ =~ s/\s*include\s+(.+)\s*/$1/i;
 
-					# grab the included file name or file glob
-					$_ =~ s/\s*include\s+(.*)\s*/$1/i;
+				# strip out any quoting
+				$_ =~ s/['"]+//g;
 
-					# prepend the Apache root for files or
-					# globs that are relative
-					if ( $_ !~ m/^\// ) {
-						$_ = $apache_root."/".$_;
-					}
-
-					# check for file globbing
-					if ( $_ =~ m/.*\*.*/ ) {
-						my $glob = $_;
-						my @include_files;
-						chomp($glob);
-
-						# if the include is a file glob,
-						# expand it and add the files
-						# to the list
-						my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
-						push(@$master_list,@new_includes);
-						push(@$find_includes_in,@new_includes);
-					}
-					else {
-						# if it is not a glob, push the 
-						# line into the configuration 
-						# array
-						push(@$master_list,$_);
-						push(@$find_includes_in,$_);
-					}
+				# prepend the Apache root for files or
+				# globs that are relative
+				if ( $_ !~ m/^\// ) {
+					$_ = $apache_root."/".$_;
 				}
-			}	
+
+				# check for file globbing
+				if ( $_ =~ m/.*\*.*/ ) {
+					my $glob = $_;
+					my @include_files;
+					chomp($glob);
+
+					# if the include is a file glob,
+					# expand it and add the files
+					# to the list
+					my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
+					push(@$master_list,@new_includes);
+					push(@$find_includes_in,@new_includes);
+				}
+				else {
+					# if it is not a glob, push the 
+					# line into the configuration 
+					# array
+					push(@$master_list,$_);
+					push(@$find_includes_in,$_);
+				}
+			}
 		}
 		# trim the first entry off the array now that we have 
 		# processed it
@@ -154,7 +159,7 @@ sub expand_included_files {
 	my ($include_files, $glob, $apache_root) = @_;
 
 	# use a call to ls to get a list of the files from the glob
-	my @files = `ls $glob`;
+	my @files = `ls $glob 2> /dev/null`;
 
 	# add the files from the glob to the array we're going to pass back
 	foreach(@files) {
@@ -802,7 +807,7 @@ sub usage {
 sub print_header {
 	print color 'bold white' if ! $main::NOCOLOR;
 	print "########################################################################\n";
-	print "# Apache Buddy v 0.2 ###################################################\n";
+	print "# Apache Buddy v 0.3 ###################################################\n";
 	print "########################################################################\n";
 	print color 'reset' if ! $main::NOCOLOR;
 }
@@ -1001,6 +1006,7 @@ else {
 
 	# determine what the max clients setting is 
 	my $maxclients = find_master_value(\@config_array, $model, 'maxclients');
+	$maxclients = 256 if($maxclients eq 'CONFIG NOT FOUND');
 	print "Your max clients setting is ".$maxclients."\n";
 
 	#calculate ThreadsPerChild. This is useful for the worker MPM calculations

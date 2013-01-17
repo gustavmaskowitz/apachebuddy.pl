@@ -1002,6 +1002,10 @@ else {
 
 	# determine what user apache runs as 
 	my $apache_user = find_master_value(\@config_array, $model, 'user');
+	if (length($apache_user) > 8) {
+                $apache_user = `id -u $apache_user`;
+                chomp($apache_user);
+        }
 	print "Apache runs as ".$apache_user."\n";
 
 	# determine what the max clients setting is 

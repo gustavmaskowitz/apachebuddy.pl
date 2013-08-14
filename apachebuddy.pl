@@ -121,6 +121,13 @@ sub find_included_files {
 				}
 
 				# check for file globbing
+
+				if(-d $_ && $_ !~ /\*$/) {
+					print "VERBOSE: Adding glob to ".$_.", is a directory\n" if $main::VERBOSE;
+					$_ .= "/" if($_ !~ /\/$/);
+					$_ .= "*";
+				}
+
 				if ( $_ =~ m/.*\*.*/ ) {
 					my $glob = $_;
 					my @include_files;

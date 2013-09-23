@@ -81,12 +81,6 @@ sub find_included_files {
 		
 		print "VERBOSE: Processing ".$file."\n" if $main::VERBOSE;
 
-		if(-d $file && $file !~ /\*$/) {
-			print "VERBOSE: Adding glob to ".$file.", is a directory\n" if $main::VERBOSE;
-			$file .= "/" if($file !~ /\/$/);
-			$file .= "*";
-		}
-
 		# open the file
 		open(FILE,$file) || die("Unable to open file: ".$file."\n");
 		
@@ -106,41 +100,48 @@ sub find_included_files {
 			# lines found
 			# my @new_includes; 
 
-			# if the line looks like an include, then we want to examine it
-			if ( $_ =~ m/^\s*include/i ) {
-				# grab the included file name or file glob
-				$_ =~ s/\s*include\s+(.+)\s*/$1/i;
+			# if the file doesn't start with a comment, then we want to examine it
+			if ( $_ !~ m/^\s*#/ ) {
+				# find lines that include other files
 
-				# strip out any quoting
-				$_ =~ s/['"]+//g;
+				# hwong@dja.com
+				# if ( $_ =~ m/\s*include\s+/i ) {
+				if ( $_ =~ m/\s*include(optional)?\s+/i ) {
 
-				# prepend the Apache root for files or
-				# globs that are relative
-				if ( $_ !~ m/^\// ) {
-					$_ = $apache_root."/".$_;
+					# grab the included file name or file glob
+					# hwong@dja.com
+					# $_ =~ s/\s*include\s+(.*)\s*/$1/i;
+
+					$_ =~ s/\s*include(optional)?\s+(.*)\s*/$2/i;
+
+					# prepend the Apache root for files or
+					# globs that are relative
+					if ( $_ !~ m/^\// ) {
+						$_ = $apache_root."/".$_;
+					}
+
+					# check for file globbing
+					if ( $_ =~ m/.*\*.*/ ) {
+						my $glob = $_;
+						my @include_files;
+						chomp($glob);
+
+						# if the include is a file glob,
+						# expand it and add the files
+						# to the list
+						my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
+						push(@$master_list,@new_includes);
+						push(@$find_includes_in,@new_includes);
+					}
+					else {
+						# if it is not a glob, push the 
+						# line into the configuration 
+						# array
+						push(@$master_list,$_);
+						push(@$find_includes_in,$_);
+					}
 				}
-
-				# check for file globbing
-				if ( $_ =~ m/.*\*.*/ ) {
-					my $glob = $_;
-					my @include_files;
-					chomp($glob);
-
-					# if the include is a file glob,
-					# expand it and add the files
-					# to the list
-					my @new_includes = expand_included_files(\@include_files, $glob, $apache_root);
-					push(@$master_list,@new_includes);
-					push(@$find_includes_in,@new_includes);
-				}
-				else {
-					# if it is not a glob, push the 
-					# line into the configuration 
-					# array
-					push(@$master_list,$_);
-					push(@$find_includes_in,$_);
-				}
-			}
+			}	
 		}
 		# trim the first entry off the array now that we have 
 		# processed it
@@ -159,7 +160,7 @@ sub expand_included_files {
 	my ($include_files, $glob, $apache_root) = @_;
 
 	# use a call to ls to get a list of the files from the glob
-	my @files = `ls $glob 2> /dev/null`;
+	my @files = `ls $glob`;
 
 	# add the files from the glob to the array we're going to pass back
 	foreach(@files) {
@@ -228,6 +229,7 @@ sub find_master_value {
 				if ( $_ =~ m/^\s*$config_element\s+.*/i ) {
 					chomp($_);
 					$_ =~ s/^\s*$config_element\s+(.*)/$1/i;
+					print "VERBOSE: ".$config_element."::".$_."\n" if $main::VERBOSE;	
 					push(@results,$_);
 				}
 			}
@@ -472,6 +474,14 @@ sub get_apache_model {
 	$model =~ s/\s*(.*)\.c/$1/;
 
 	# return the name of the MPM, or 0 if there is no result
+
+        # update for 2.4.6 - Fedora 19, hwong@dja.com
+	if ($model eq '') {
+		$model = `$process_name -V | egrep "worker|prefork"`;
+		chomp($model);
+		$model =~ s/.+(worker|prefork)$/$1/;
+	}
+
 	if ( $model eq '' ) {
 		$model = 0 ;
 	}
@@ -807,7 +817,7 @@ sub usage {
 sub print_header {
 	print color 'bold white' if ! $main::NOCOLOR;
 	print "########################################################################\n";
-	print "# Apache Buddy v 0.3 ###################################################\n";
+	print "# Apache Buddy v 0.2a ##################################################\n";
 	print "########################################################################\n";
 	print color 'reset' if ! $main::NOCOLOR;
 }
@@ -1002,15 +1012,16 @@ else {
 
 	# determine what user apache runs as 
 	my $apache_user = find_master_value(\@config_array, $model, 'user');
-	if (length($apache_user) > 8) {
-                $apache_user = `id -u $apache_user`;
-                chomp($apache_user);
-        }
 	print "Apache runs as ".$apache_user."\n";
 
 	# determine what the max clients setting is 
-	my $maxclients = find_master_value(\@config_array, $model, 'maxclients');
-	$maxclients = 256 if($maxclients eq 'CONFIG NOT FOUND');
+	# Fixed httpd 2.4+ hwong@dja.com
+	my $maxclients;
+	if (get_apache_version($process_name) =~ m/2\.4/) {
+		$maxclients = find_master_value(\@config_array, $model, 'maxrequestworkers');
+	} else {		
+		$maxclients = find_master_value(\@config_array, $model, 'maxclients');
+	}
 	print "Your max clients setting is ".$maxclients."\n";
 
 	#calculate ThreadsPerChild. This is useful for the worker MPM calculations

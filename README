@@ -1,5 +1,9 @@
-Apachebuddy.pl supercedes my own little bash script to do the same (except apachebuddy was done by a proper tech) ;) You can also grab a copy at: http://cloudfiles.fanatassist.com/apachebuddy.pl
+Apachebuddy.pl supercedes my own little bash script to do the same (except apachebuddy was done by a proper tech) ;) 
+You can also grab a copy at: http://cloudfiles.fanatassist.com/apachebuddy.pl
 
-RPM: 
+NEW:
+Grab this from http://apachebuddy.pl  (thanks to Will Parsons for that domain name)
+
+Deprecated - RPMs:
 http://c2043.r43.cf3.rackcdn.com/apachebuddy-0.4-1.rs.noarch.rpm
 http://c2043.r43.cf3.rackcdn.com/apachebuddy-0.4-1.rs.noarch.rpm.md5

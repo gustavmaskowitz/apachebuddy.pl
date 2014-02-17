@@ -361,21 +361,24 @@ sub get_memory_usage {
 sub test_process {
 	my ($process_name) = @_;
 
+        # Reduce to only aphanumerics, to deal with "nginx: master process" or any newlnes
+        $process_name = `echo -n $process_name | sed 's/://g'`;
+
 	# the first line of output from "httpd -V" should tell us whether or
 	# not this is Apache
-	my @output = `$process_name -V`;
+	my @output = `$process_name -V 2>&1`;
 
 	print "VERBOSE: First line of output from \"$process_name -V\": $output[0]" if $main::VERBOSE;
 
 	my $return_val = 0;
+        #if ( $output eq '' ) {
+        #    $return_val = 0;
+        #}
 
-	# check for output matching Apache's
-	if ( $output[0] =~ m/^Server version.*Apache\/[0-9].*/ ) {
+	# check for output matching Apache'
+        if ( $output[0] =~ m/^Server version.*Apache\/[0-9].*/ ) {
 		$return_val = 1;
 	} 
-	else {
-		$return_val = 0;
-	}
 
 	return $return_val;
 }
@@ -399,7 +402,7 @@ sub get_pid {
 			$pid = $_;
 		}
 		elsif ( $pid != $_ ) {
-			print "There are multiple PIDs listening on port 80.";
+			print "There are multiple PIDs listening on port $port.";
 			exit;
 		}
 		else { 
@@ -407,7 +410,12 @@ sub get_pid {
 		}
 	}
 
-	# return the pid, or 0 if there is no process listening on that port
+        # Fallback - Look for root owned httpd|apache2 process
+        #if ( $pid eq '' ) {
+        #   $pid = `ps aux | grep -v grep | egrep \'^root.*(httpd|apache2)\$\' | awk \'{print \$2}\'`;
+        #}
+
+	# return the pid, or 0 if there is no process found
 	if ( $pid eq '' ) {
 		$pid = 0;
 	}
@@ -936,10 +944,10 @@ else {
 
 	# check to see if there is a file in the file system at the path 
 	# identified
-	if  ( ! -e $process_name ) {
-		print "File .".$process_name." does not exist.\n";
-		exit;
-	}
+	#if  ( ! -e $process_name ) {
+	#	print "File .".$process_name." does not exist.\n";
+	#	exit;
+	#}
 
 	# check to see if the process we have identified is Apache
 	my $is_it_apache = test_process($process_name);
@@ -954,11 +962,18 @@ else {
 			$apache_version = "Apache";	
 		}
 
-		print "The process running on port 80 is $apache_version\n";
+		print "The process running on port $port is $apache_version\n";
 	}
 	else {
-		print "The process running on port 80 is not Apache\n";
-		exit;
+		print "The process running on port $port is not Apache. \n Falling back to process list...\n";
+                $pid = `ps aux | grep -v grep | egrep \'^root\.\*(httpd|apache2)\$\' | awk \'BEGIN {ORS=\"\"} {print \$2}\' `;
+                if ( $pid eq '' ) {
+                    print "Could not find Apache process. Exiting...\n";
+  		    exit;
+                } else {
+                    # If we found it, then reset the proces_name
+                    $process_name = get_process_name($pid);
+                } 
 	}
 
 	# determine the Apache uptime

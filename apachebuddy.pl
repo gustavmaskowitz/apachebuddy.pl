@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # author: jacob walcik
-# version: 0.3
+# version: 0.4
 # description: This will make some recommendations on tuning your Apache 
 # configuration based on your current settings and Apache's memory usage
 #
@@ -832,7 +832,7 @@ sub usage {
 sub print_header {
 	print color 'bold white' if ! $main::NOCOLOR;
 	print "########################################################################\n";
-	print "# Apache Buddy v 0.3 ###################################################\n";
+	print "# Apache Buddy v 0.4 ###################################################\n";
 	print "########################################################################\n";
 	print color 'reset' if ! $main::NOCOLOR;
 }

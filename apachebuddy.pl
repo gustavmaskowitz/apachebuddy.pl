@@ -558,8 +558,8 @@ sub get_apache_uptime {
 sub fcgid_loaded {
      my ( @process_name ) = @_;
      # Using Grep -c; will return 0 or 1 if module appears in list. 
-     my @fcgid = `@process_name -M 2>/dev/null | grep -c fcgid`;
-     return @fcgid;
+     my @grep_fcgid = `@process_name -M 2>/dev/null | grep -c fcgid`;
+     return @grep_fcgid[0];
 
 }
 
@@ -1056,7 +1056,7 @@ else {
         
         my $fcgid = 0;
         my $fcgid_max_processes = '';
-        if  ( fcgid_loaded($process_name) ) {
+        if  ( fcgid_loaded($process_name) == 1 ) {
             $fcgid = 1;
             $fcgid_max_processes = find_master_value(\@config_array, $model, 'fcgidmaxprocesses');
             print "mod_fcgid is loaded, and FcgidMaxProcesses is ".$fcgid_max_processes."\n";

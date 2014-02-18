@@ -558,8 +558,8 @@ sub get_apache_uptime {
 sub fcgid_loaded {
      my ( @process_name ) = @_;
      # Using Grep -c; will return 0 or 1 if module appears in list. 
-     my @grep_fcgid = `@process_name -M 2>/dev/null | grep -c fcgid`;
-     return @grep_fcgid[0];
+     my $grep_fcgid = `@process_name -M 2>/dev/null | grep -c fcgid`;
+     return $grep_fcgid[0];
 
 }
 

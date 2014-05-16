@@ -1,6 +1,9 @@
-Apachebuddy.pl supercedes my own Redhat only bash script 'apachetuner.sh' so am hosting it, but honestly there is no active development here. Primarily, because there are beter ways to achieve the same. Please check out Satori: http://satori.readthedocs.org/en/latest/ and 'ohai-solo' where most of the apachebuddy functionality has been implemented as Apache-plugins. See https://github.com/rackerlabs/ohai-plugins/blob/master/plugins/apache2.rb )
+Apachebuddy.pl supercedes my own Redhat only bash script 'apachetuner.sh' so am hosting it.
+However there is no active development on this perl script, because there are beter ways to achieve the same. 
 
-NEW:
+Please check out Satori: http://satori.readthedocs.org/en/latest/ and 'ohai-solo' where most of the apachebuddy functionality has been implemented as Apache-plugins. See https://github.com/rackerlabs/ohai-plugins and particularly the Apache2 plugins: https://github.com/rackerlabs/ohai-plugins/blob/master/plugins/apache2.rb )
+
+GET:
 Grab this from http://apachebuddy.pl  (thanks to Will Parsons for that domain name)
 
 BEWARE:

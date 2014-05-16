@@ -1,7 +1,12 @@
-Apachebuddy.pl supercedes my own little bash script 'apachetuner.sh'
+Apachebuddy.pl supercedes my own Redhat only bash script 'apachetuner.sh' so am hosting it, but honestly there is no active development here. Primarily, because there are beter ways to achieve the same. Please check out Satori: http://satori.readthedocs.org/en/latest/ and 'ohai-solo' where most of the apachebuddy functionality has been implemented as Apache-plugins. See https://github.com/rackerlabs/ohai-plugins/blob/master/plugins/apache2.rb )
 
 NEW:
 Grab this from http://apachebuddy.pl  (thanks to Will Parsons for that domain name)
+
+BEWARE:
+Do NOT run code you dont control as root on a server you care about. Who says something nefarious has not crept into this code? Just saying. Stay safe and review EVERYTHING.
+
+If you use this daily, consider rolling .rpm and .debs for it because I won't be.
 
 Deprecated - RPMs:
 http://c2043.r43.cf3.rackcdn.com/apachebuddy-0.4-1.rs.noarch.rpm

@@ -482,9 +482,13 @@ sub get_apache_conf_file {
 # model based on the way the binary was built
 sub get_apache_model {
 	my ( $process_name ) = @_;
-	my $model = `$process_name -l | egrep "worker.c|prefork.c"`;
+	my $model = `$process_name -l | egrep "worker.c|prefork.c|itk.c"`;
 	chomp($model);
 	$model =~ s/\s*(.*)\.c/$1/;
+
+  if ( $model eq 'itk' ) {
+    $model = 'prefork' ;
+  }
 
 	# return the name of the MPM, or 0 if there is no result
 	if ( $model eq '' ) {

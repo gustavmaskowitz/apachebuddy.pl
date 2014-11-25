@@ -482,7 +482,7 @@ sub get_apache_conf_file {
 # model based on the way the binary was built
 sub get_apache_model {
 	my ( $process_name ) = @_;
-	my $model = `$process_name -L | egrep "worker.c|prefork.c"`;
+	my $model = `$process_name -L | egrep "worker.c|prefork.c"|head -1`;
 	chomp($model);
 	$model =~  s/.*\((.*)\.c\).*/$1/;
 	#s/\s*(.*)\.c/$1/;
@@ -491,7 +491,7 @@ sub get_apache_model {
 	if ( $model eq '' ) {
 		$model = 0 ;
 	}
-  $model = 'prefork';
+  #$model = 'prefork';
 	return $model;
 }
 

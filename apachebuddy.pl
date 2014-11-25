@@ -491,7 +491,7 @@ sub get_apache_model {
 	if ( $model eq '' ) {
 		$model = 0 ;
 	}
-
+  $model = 'prefork';
 	return $model;
 }
 

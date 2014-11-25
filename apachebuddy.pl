@@ -936,7 +936,7 @@ else {
 
 	# now we get the name of the process running with the specified pid
 	my $process_name = get_process_name($pid);
-	my $process_helper = 'apache2ctl'
+	my $process_helper = 'apache2ctl';
 	print "The process listening on port ".$port." is ".$process_name."\n";
 	if ( $process_name eq 0 ) {
 		print "Unable to determine the name of the process.";

@@ -484,7 +484,8 @@ sub get_apache_model {
 	my ( $process_name ) = @_;
 	my $model = `$process_name -L | egrep "worker.c|prefork.c"`;
 	chomp($model);
-	$model =~ s/\s*(.*)\.c/$1/;
+	$model =~  s/.*\((.*)\.c\).*/$1/;
+	#s/\s*(.*)\.c/$1/;
 
 	# return the name of the MPM, or 0 if there is no result
 	if ( $model eq '' ) {

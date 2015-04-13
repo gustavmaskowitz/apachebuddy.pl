@@ -101,6 +101,7 @@ sub find_included_files {
 
 		# search the file for includes
 		foreach (@file) {
+			chomp($_);
 
 			# this will be used to store a list of any new include
 			# lines found

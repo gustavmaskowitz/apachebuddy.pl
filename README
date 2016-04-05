@@ -9,8 +9,4 @@ Grab this from http://apachebuddy.pl  (thanks to Will Parsons for that domain na
 BEWARE:
 Do NOT run code you dont control as root on a server you care about. Who says something nefarious has not crept into this code? Just saying. Stay safe and review EVERYTHING.
 
-If you use this daily, consider rolling .rpm and .debs for it because I won't be.
-
-Deprecated - RPMs:
-http://c2043.r43.cf3.rackcdn.com/apachebuddy-0.4-1.rs.noarch.rpm
-http://c2043.r43.cf3.rackcdn.com/apachebuddy-0.4-1.rs.noarch.rpm.md5
+If you use this daily, consider rolling .rpm and .debs for it.

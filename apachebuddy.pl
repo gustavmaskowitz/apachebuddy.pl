@@ -2,11 +2,11 @@
 #
 # author: jacob walcik
 # version: 0.3
-# description: This will make some recommendations on tuning your Apache 
+# description: This will make some recommendations on tuning your Apache
 # configuration based on your current settings and Apache's memory usage
 #
 # acknowledgements: This script was inspired by Major Hayden's MySQL Tuner
-# (http://mysqltuner.com). 
+# (http://mysqltuner.com).
 
 use diagnostics;
 use Getopt::Long qw(:config no_ignore_case bundling pass_through);
@@ -14,16 +14,16 @@ use POSIX;
 use strict;
 use Term::ANSIColor;
 
-# here we're going to build a list of the files included by the Apache 
+# here we're going to build a list of the files included by the Apache
 # configuration
 sub build_list_of_files {
 	my ($base_apache_config,$apache_root) = @_;
 
 	# these to arrays will contain lists of Apache configuration files
-	# this is going to be the ultimate list of files that will be parsed 
+	# this is going to be the ultimate list of files that will be parsed
 	# searching for arguments
 	my @master_list;
-	# this will be a "scratch" space to store a list of files that 
+	# this will be a "scratch" space to store a list of files that
 	# currently need to be searched for more "include" lines
 	my @find_includes_in;
 
@@ -31,7 +31,7 @@ sub build_list_of_files {
 	# to include
 	push(@master_list,$base_apache_config);
 
-	# put the main configuratino file into the list of files we need to 
+	# put the main configuratino file into the list of files we need to
 	# search for include lines
 	push(@find_includes_in,$base_apache_config);
 
@@ -39,17 +39,17 @@ sub build_list_of_files {
 	@master_list = find_included_files(\@master_list,\@find_includes_in,$apache_root);
 }
 
-# here we're going to build an array holding the content of all of the 
+# here we're going to build an array holding the content of all of the
 # available configuration files
 sub build_config_array {
 	my ($base_apache_config,$apache_root) = @_;
 
 	# these to arrays will contain lists of Apache configuration files
-	# this is going to be the ultimate list of files that will be parsed 
+	# this is going to be the ultimate list of files that will be parsed
 	# searching for arguments
 	my @master_list;
 
-	# this will be a "scratch" space to store a list of files that 
+	# this will be a "scratch" space to store a list of files that
 	# currently need to be searched for more "include" lines
 	my @find_includes_in;
 
@@ -57,7 +57,7 @@ sub build_config_array {
 	# to include
 	push(@master_list,$base_apache_config);
 
-	# put the main configuratino file into the list of files we need to 
+	# put the main configuratino file into the list of files we need to
 	# search for include lines
 	push(@find_includes_in,$base_apache_config);
 
@@ -67,7 +67,7 @@ sub build_config_array {
 
 # this will find all of the files that need to be included
 sub find_included_files {
-	my ($master_list, $find_includes_in, $apache_root) = @_; 
+	my ($master_list, $find_includes_in, $apache_root) = @_;
 
 	# get the number of elements in the array
 	my $count = @$find_includes_in;
@@ -78,7 +78,7 @@ sub find_included_files {
 	# while there are still entries in this array, keep processing
 	while ( $count > 0 ) {
 		my $file = $$find_includes_in[0];
-		
+
 		print "VERBOSE: Processing ".$file."\n" if $main::VERBOSE;
 
 		if(-d $file && $file !~ /\*$/) {
@@ -89,7 +89,7 @@ sub find_included_files {
 
 		# open the file
 		open(FILE,$file) || die("Unable to open file: ".$file."\n");
-		
+
 		# push the file into an array
 		my @file = <FILE>;
 
@@ -101,10 +101,11 @@ sub find_included_files {
 
 		# search the file for includes
 		foreach (@file) {
+			chomp($_);
 
 			# this will be used to store a list of any new include
 			# lines found
-			# my @new_includes; 
+			# my @new_includes;
 
 			# if the line looks like an include, then we want to examine it
 			if ( $_ =~ m/^\s*include/i ) {
@@ -141,15 +142,15 @@ sub find_included_files {
 					push(@$find_includes_in,@new_includes);
 				}
 				else {
-					# if it is not a glob, push the 
-					# line into the configuration 
+					# if it is not a glob, push the
+					# line into the configuration
 					# array
 					push(@$master_list,$_);
 					push(@$find_includes_in,$_);
 				}
 			}
 		}
-		# trim the first entry off the array now that we have 
+		# trim the first entry off the array now that we have
 		# processed it
 		shift(@$find_includes_in);
 
@@ -179,7 +180,7 @@ sub expand_included_files {
 	return @$include_files;
 }
 
-# search the configuration array for a defined value that is not inside of a 
+# search the configuration array for a defined value that is not inside of a
 # virtual host
 sub find_master_value {
 	my ($config_array, $model, $config_element) = @_;
@@ -187,7 +188,7 @@ sub find_master_value {
 	# store our results in an array
 	my @results;
 
-	# used to control whether or not we are currently ignoring elements 
+	# used to control whether or not we are currently ignoring elements
 	# while searching the array
 	my $ignore = 0;
 
@@ -195,10 +196,10 @@ sub find_master_value {
 	my $ifmodule_count = 0;
 
 	# apache has two available models - prefork and worker. only one can be
-	# in use at a time. we have already determined which model is being 
+	# in use at a time. we have already determined which model is being
 	# used
 	my $ignore_model;
-	
+
 	if ( $model =~ m/.*worker.*/i ) {
 		$ignore_model = "prefork";
 	} else {
@@ -213,10 +214,10 @@ sub find_master_value {
 		if ( $_ !~ m/^\s*#/ ) {
 			chomp($_);
 
-			# we ignore lines that are within a Directory, Location, 
+			# we ignore lines that are within a Directory, Location,
 			# File, or Virtualhost block
-		
-			# check to see if we have an opening tag for one of the 
+
+			# check to see if we have an opening tag for one of the
 			# block types listed above
 			if ( $_ =~ m/^\s*<(directory|location|files|virtualhost|ifmodule\s.*$ignore_model)/i ) {
 				#print "Starting to ignore lines: ".$_."\n";
@@ -228,9 +229,9 @@ sub find_master_value {
 				$ignore = 0;
 			}
 
-			# if we're not ignoring lines, check and see if we've 
+			# if we're not ignoring lines, check and see if we've
 			# found the configuration element we're looking for
-			if ( $ignore != 1 ) {		
+			if ( $ignore != 1 ) {
 				# if we find a match
 				if ( $_ =~ m/^\s*$config_element\s+.*/i ) {
 					chomp($_);
@@ -241,7 +242,7 @@ sub find_master_value {
 		}
 	}
 
-	# if we find multiple definitions for the same element, we should 
+	# if we find multiple definitions for the same element, we should
 	# return the last one
 	my $result;
 
@@ -258,20 +259,20 @@ sub find_master_value {
 	}
 
 	print "VERBOSE: $result " if $main::VERBOSE;
-	# Ubuntu does not store the Apache user, group, or pidfile definitions 
-	# in the apache2.conf file. instead, variables are in the configuration 
-	# file and the real values are in /etc/apache2/envvars. this is a 
+	# Ubuntu does not store the Apache user, group, or pidfile definitions
+	# in the apache2.conf file. instead, variables are in the configuration
+	# file and the real values are in /etc/apache2/envvars. this is a
 	# workaround for that behavior.
 	if ( $config_element =~ m/[users|group|pidfile]/i && $result =~ m/^\$/i ) {
 		if ( -e "/etc/debian_version" && -e "/etc/apache2/envvars") {
 			print "VERBOSE: Using Ubuntu workaround for: ".$config_element."\n" if $main::VERBOSE;
 			print "VERBOSE: Processing /etc/apache2/envvars\n" if $main::VERBOSE;
 
-			open(ENVVARS,"/etc/apache2/envvars") || die "Could not open file: /etc/apache2/envvars\n";	
+			open(ENVVARS,"/etc/apache2/envvars") || die "Could not open file: /etc/apache2/envvars\n";
 			my @envvars = <ENVVARS>;
 			close(ENVVARS);
 
-			# change "pidfile" to match Ubuntu's "pid_file" 
+			# change "pidfile" to match Ubuntu's "pid_file"
 			# definition
 			if ( $config_element =~ m/pidfile/i ) {
 				$config_element = "pid_file";
@@ -306,23 +307,23 @@ sub get_memory_usage {
 	foreach (@pids) {
 		chomp($_);
 
-		# pmap -d is used to determine the memory usage for the 
+		# pmap -d is used to determine the memory usage for the
 		# individual processes
 		my $pid_mem_usage = `pmap -d $_ | grep writeable/private | awk \'{ print \$4 }\'`;
 		$pid_mem_usage =~ s/K//;
 		chomp($pid_mem_usage);
 
 		print "VERBOSE: Memory usage by PID ".$_." is ".$pid_mem_usage."K\n" if $main::VERBOSE;
-		
+
 		# on a busy system, the grep output will return the pid for the
-		# grep process itself, which will be gone by the time we get 
+		# grep process itself, which will be gone by the time we get
 		# around to running pmap
 		if ( $pid_mem_usage ne "" ) {
 			push(@proc_mem_usages, $pid_mem_usage);
 		}
 	}
 
-	# examine the array 
+	# examine the array
 	if ( $search_type eq "high" ) {
 		# to find the largest process, sort the values from largest to
 		# smallest and take the first one
@@ -338,25 +339,25 @@ sub get_memory_usage {
 	if ( $search_type eq "average" ) {
 		# to get the average, add up the total amount of memory used by
 		# each process, and then divide by the number of processes
-		my $sum = 0; 
+		my $sum = 0;
 		my $count;
 		foreach (@proc_mem_usages) {
 			$sum = $sum + $_;
 			$count++;
-		} 
+		}
 
-		# our result is in kilobytes, convert it to megabytes before 
+		# our result is in kilobytes, convert it to megabytes before
 		# returning it
 		$result = $sum / $count / 1024;
 	}
-	
+
 	# round off the result
 	$result = round($result);
 
 	return $result;
 }
 
-# this function accepts the path to a file and then tests to see whether the 
+# this function accepts the path to a file and then tests to see whether the
 # item at that path is an Apache binary
 sub test_process {
 	my ($process_name) = @_;
@@ -378,7 +379,7 @@ sub test_process {
 	# check for output matching Apache'
         if ( $output[0] =~ m/^Server version.*Apache\/[0-9].*/ ) {
 		$return_val = 1;
-	} 
+	}
 
 	return $return_val;
 }
@@ -393,7 +394,7 @@ sub get_pid {
 
 	print "VERBOSE: ".@pids." found listening on port 80\n" if $main::VERBOSE;
 
-	# set an initial, invalid PID. 
+	# set an initial, invalid PID.
 	my $pid = 0;;
 	foreach (@pids) {
 		chomp($_);
@@ -405,7 +406,7 @@ sub get_pid {
 			print "There are multiple PIDs listening on port $port.";
 			exit;
 		}
-		else { 
+		else {
 			$pid = $_;
 		}
 	}
@@ -449,7 +450,7 @@ sub get_process_name {
 # Apache binary
 sub get_apache_root {
 	my ( $process_name ) = @_;
-	# use the identified Apache binary to figure out where the root directory is 
+	# use the identified Apache binary to figure out where the root directory is
 	# for the Apache instance
 	my $apache_root = `$process_name -V | grep \"HTTPD_ROOT\"`;
 	$apache_root =~ s/.*=\"(.*)\"/$1/;
@@ -482,15 +483,16 @@ sub get_apache_conf_file {
 # model based on the way the binary was built
 sub get_apache_model {
 	my ( $process_name ) = @_;
-	my $model = `$process_name -l | egrep "worker.c|prefork.c"`;
+	my $model = `$process_name -L | egrep "worker.c|prefork.c"|head -1`;
 	chomp($model);
-	$model =~ s/\s*(.*)\.c/$1/;
+	$model =~  s/.*\((.*)\.c\).*/$1/;
+	#s/\s*(.*)\.c/$1/;
 
 	# return the name of the MPM, or 0 if there is no result
 	if ( $model eq '' ) {
 		$model = 0 ;
 	}
-
+  #$model = 'prefork';
 	return $model;
 }
 
@@ -508,11 +510,11 @@ sub get_apache_version {
 	return $version
 }
 
-# this will us ps to determine the Apache uptime. it returns an array 
+# this will us ps to determine the Apache uptime. it returns an array
 sub get_apache_uptime {
 	my ( $pid ) = @_;
 
-	# this will return the running time for the given pid in the format 
+	# this will return the running time for the given pid in the format
 	# "days-hours:minutes:seconds"
 	my $uptime = `ps -eo \"\%p \%t\" | grep $pid | grep -v grep | awk \'{ print \$2 }\'`;
 	chomp($uptime);
@@ -521,13 +523,13 @@ sub get_apache_uptime {
 
 	# check to see if we've been running for multiple days
 	my ($days, $hours, $minutes, $seconds);
-	if ( $uptime =~ m/^.*-.*:.*:.*$/ ) {	
+	if ( $uptime =~ m/^.*-.*:.*:.*$/ ) {
 		$days = $uptime;
 		$days =~ s/([0-9]*)-.*/$1/;
 
 		# trim the days off of our uptime value
 		$uptime =~ s/.*-(.*)/$1/;
-	
+
 		($hours, $minutes, $seconds) = split(':', $uptime);
 	}
 	elsif ( $uptime =~ m/^.*:.*:.*/ ) {
@@ -537,7 +539,7 @@ sub get_apache_uptime {
 	elsif ( $uptime =~ m/^.*:.*/) {
 		$days = 0;
 		$hours = 0;
-		($minutes, $seconds) = split(':', $uptime);	
+		($minutes, $seconds) = split(':', $uptime);
 	}
 	else {
 		$days = 0;
@@ -549,16 +551,16 @@ sub get_apache_uptime {
 	# push everything into an array to pass back
 	my @apache_uptime = ( $days, $hours, $minutes, $seconds );
 
-	
+
 
 	return @apache_uptime;
 }
 
 # return the global value for a PHP setting
 sub get_php_setting {
-	my ( $php_bin, $element ) = @_;	
+	my ( $php_bin, $element ) = @_;
 
-	# this will return an array with all of the local and global PHP 
+	# this will return an array with all of the local and global PHP
 	# settings
 	my @php_config_array = `php -r "phpinfo(4);"`;
 
@@ -574,7 +576,7 @@ sub get_php_setting {
 		}
 	}
 
-        # if we find multiple definitions for the same element, we should 
+        # if we find multiple definitions for the same element, we should
         # return the last one (just in case)
         my $result;
 
@@ -626,7 +628,7 @@ sub generate_standard_report {
 	print color 'reset' if ! $main::NOCOLOR;
 
 	if ($model eq "prefork") {
-		# based on the Apache memory usage (size of the largest process, 
+		# based on the Apache memory usage (size of the largest process,
 		# check to see if the maxclients setting for Apache is sane
 		my $max_rec_maxclients = $available_mem / $apache_proc_highest;
 		$max_rec_maxclients = floor($max_rec_maxclients);
@@ -636,7 +638,7 @@ sub generate_standard_report {
 		my $max_potential_usage_pct = round(($max_potential_usage/$available_mem)*100);
 		if ( $maxclients <= $max_rec_maxclients ) {
 			print color 'bold green' if ! $main::NOCOLOR;
-			print "[ OK ]"; 
+			print "[ OK ]";
 			print color 'reset' if ! $main::NOCOLOR;
 			print "\tYour MaxClients setting is within an acceptable range.\n";
 			print "\tMax potential memory usage: \t\t";
@@ -680,7 +682,7 @@ sub generate_standard_report {
 		my $max_potential_usage_pct = round(($max_potential_usage/$available_mem)*100);
 		if ( $maxclients <= $max_rec_maxclients ) {
 			print color 'bold green' if ! $main::NOCOLOR;
-			print "[ OK ]"; 
+			print "[ OK ]";
 			print color 'reset' if ! $main::NOCOLOR;
 			print "\tYour MaxClients setting is within an acceptable range.\n";
 			print "\t(Max potential memory usage: ";
@@ -688,7 +690,7 @@ sub generate_standard_report {
 			print $max_potential_usage." MB" ."($max_potential_usage_pct % of available RAM)" ;
 			print color 'reset';
 			print ")\n\n";
-			
+
 			print "\tPercentage of RAM allocated to Apache\t\t";
 			print color 'bold white' if ! $main::NOCOLOR;
 			print $max_potential_usage_pct." %" ;
@@ -795,7 +797,7 @@ sub round {
 	$value = sprintf("%.2f", $value);
 
 	return $value;
-}	
+}
 
 #Return the number of CPU cores
 sub get_cores {
@@ -870,20 +872,20 @@ chomp($uid);
 
 print "VERBOSE: UID of user is: ".$uid."\n" if $VERBOSE;
 
-# we need to run as root to ensure that we can access all of the appropriate 
+# we need to run as root to ensure that we can access all of the appropriate
 # files
 if ( $uid ne '0' ) {
 	print "This script must be run as root.\n";
 	exit;
 }
 
-# this script uses pmap to determine the memory mapped to each apache 
+# this script uses pmap to determine the memory mapped to each apache
 # process. make sure that pmap is available.
 my $pmap = `which pmap`;
 chomp($pmap);
 
 # make sure that pmap is available within our path
-if ( $pmap !~ m/.*\/pmap/ ) { 
+if ( $pmap !~ m/.*\/pmap/ ) {
 	print "Unable to locate the pmap utility. This script requires pmap to analyze Apache's memory consumption.\n";
 	exit;
 }
@@ -904,7 +906,7 @@ if ( $php == 1 ) {
 	}
 }
 
-# if the user has added the help flag, or if they have defined a port  
+# if the user has added the help flag, or if they have defined a port
 if ( $help eq 1 || $port eq 0 ) {
 	usage();
 	exit;
@@ -922,7 +924,7 @@ else {
 	print "Gathering information...\n";
 	print color 'reset' if ! $NOCOLOR;
 
-	# first thing we do is get the pid of the process listening on the 
+	# first thing we do is get the pid of the process listening on the
 	# specified port
 	print "We are checking the service running on port ".$port."\n";
 	my $pid = get_pid($port);
@@ -936,13 +938,14 @@ else {
 
 	# now we get the name of the process running with the specified pid
 	my $process_name = get_process_name($pid);
+	my $process_helper = 'apache2ctl';
 	print "The process listening on port ".$port." is ".$process_name."\n";
 	if ( $process_name eq 0 ) {
 		print "Unable to determine the name of the process.";
 		exit;
 	}
 
-	# check to see if there is a file in the file system at the path 
+	# check to see if there is a file in the file system at the path
 	# identified
 	#if  ( ! -e $process_name ) {
 	#	print "File .".$process_name." does not exist.\n";
@@ -950,16 +953,16 @@ else {
 	#}
 
 	# check to see if the process we have identified is Apache
-	my $is_it_apache = test_process($process_name);
+	my $is_it_apache = test_process($process_helper);
 
 	if ( $is_it_apache == 1 ) {
-		my $apache_version = get_apache_version($process_name);
+		my $apache_version = get_apache_version($process_helper);
 
 		print "VERBOSE: Apache version: $apache_version\n" if $VERBOSE;
 
 		# if we received a "0", just print "Apache"
 		if ( $apache_version eq 0 ) {
-			$apache_version = "Apache";	
+			$apache_version = "Apache";
 		}
 
 		print "The process running on port $port is $apache_version\n";
@@ -973,23 +976,23 @@ else {
                 } else {
                     # If we found it, then reset the proces_name
                     $process_name = get_process_name($pid);
-                } 
+                }
 	}
 
 	# determine the Apache uptime
 	my @apache_uptime = get_apache_uptime($pid);
 	print "Apache has been running ".$apache_uptime[0]."d ".$apache_uptime[1]."h ".$apache_uptime[2]."m ".$apache_uptime[3]."s\n";
 
-	# find the apache root	
-	my $apache_root = get_apache_root($process_name);
+	# find the apache root
+	my $apache_root = get_apache_root($process_helper);
 
 	print "VERBOSE: The Apache root is: ".$apache_root."\n" if $VERBOSE;
-	
+
 	# find the apache configuration file (relative to the apache root)
-	my $apache_conf_file = get_apache_conf_file($process_name);
+	my $apache_conf_file = get_apache_conf_file($process_helper);
 	print "VERBOSE: The Apache config file is: ".$apache_conf_file."\n" if $VERBOSE;
 
-	# piece together the full path to the configuration file, if a server 
+	# piece together the full path to the configuration file, if a server
 	# does not have the HTTPD_ROOT value defined in its apache build, then
 	# try just using the path to the configuration file
 	my $full_apache_conf_file_path;
@@ -1007,7 +1010,7 @@ else {
 	}
 
 	# find out if we're using worker or prefork
-	my $model = get_apache_model($process_name);	
+	my $model = get_apache_model($process_helper);
 	if ( $model eq 0 ) {
 		print "Unable to determine whether Apache is using worker or prefork\n";
 	}
@@ -1022,7 +1025,7 @@ else {
 	# get the entire config, including included files, into an array
 	my @config_array = build_config_array($full_apache_conf_file_path,$apache_root);
 
-	# determine what user apache runs as 
+	# determine what user apache runs as
 	my $apache_user = find_master_value(\@config_array, $model, 'user');
 	if (length($apache_user) > 8) {
                 $apache_user = `id -u $apache_user`;
@@ -1030,7 +1033,7 @@ else {
         }
 	print "Apache runs as ".$apache_user."\n";
 
-	# determine what the max clients setting is 
+	# determine what the max clients setting is
 	my $maxclients = find_master_value(\@config_array, $model, 'maxclients');
 	$maxclients = 256 if($maxclients eq 'CONFIG NOT FOUND');
 	print "Your max clients setting is ".$maxclients."\n";

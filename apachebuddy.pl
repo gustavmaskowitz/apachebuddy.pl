@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # author: jacob walcik
-# version: 0.3
+# version: 0.4
 # description: This will make some recommendations on tuning your Apache 
 # configuration based on your current settings and Apache's memory usage
 #
@@ -554,6 +554,16 @@ sub get_apache_uptime {
 	return @apache_uptime;
 }
 
+# Is mod_fcgid loaded?
+sub fcgid_loaded {
+     my ( @process_name ) = @_;
+     # Using Grep -c; will return 0 or 1 if module appears in list. 
+     my @grep_fcgid = `@process_name -M 2>/dev/null | grep -c fcgid`;
+     return $grep_fcgid[0];
+
+}
+
+
 # return the global value for a PHP setting
 sub get_php_setting {
 	my ( $php_bin, $element ) = @_;	
@@ -822,7 +832,7 @@ sub usage {
 sub print_header {
 	print color 'bold white' if ! $main::NOCOLOR;
 	print "########################################################################\n";
-	print "# Apache Buddy v 0.3 ###################################################\n";
+	print "# Apache Buddy v 0.4 ###################################################\n";
 	print "########################################################################\n";
 	print color 'reset' if ! $main::NOCOLOR;
 }
@@ -1043,7 +1053,14 @@ else {
 		print "Your ThreadsPerChild setting for worker MPM is  ".$threadsperchild."\n";
 		print "Your ServerLimit setting for worker MPM is  ".$serverlimit."\n";
 	}
-
+        
+        my $fcgid = 0;
+        my $fcgid_max_processes = '';
+        if  ( fcgid_loaded($process_name) == 1 ) {
+            $fcgid = 1;
+            $fcgid_max_processes = find_master_value(\@config_array, $model, 'fcgidmaxprocesses');
+            print "mod_fcgid is loaded, and FcgidMaxProcesses is ".$fcgid_max_processes."\n";
+        }
 	print color 'bold white' if ! $NOCOLOR;
 	print "\nAnalyzing memory use...\n";
 	print color 'reset' if ! $NOCOLOR;
@@ -1058,6 +1075,15 @@ else {
 	my $apache_proc_lowest = get_memory_usage($process_name, $apache_user, 'low');
 	my $apache_proc_average = get_memory_usage($process_name, $apache_user, 'average');
 
+        my $php_proc_highest = 0;
+        my $php_proc_average = 0;
+        my $php_procs_number = `ps aux | grep -v grep | grep -c "php-cgi"`;
+        if ( $fcgid ){
+                if ( $php_procs_number ge 1) {
+                        $php_proc_highest = get_memory_usage('php-cgi','\ ','high');
+                        $php_proc_average = get_memory_usage('php-cgi','\ ','average')
+                }
+        }
 
 	if ( $model eq "prefork") {
 		print "The largest apache process is using ".$apache_proc_highest." MB of memory\n";
@@ -1085,6 +1111,29 @@ else {
 		my $highest_potential_use_pct = round(($highest_potential_use/$available_mem)*100);
 		print "Going by the largest Apache process, Apache can potentially use ".$highest_potential_use." MB RAM ($highest_potential_use_pct % of available RAM)\n" ;
 	}
+   
+        if ( $fcgid ) {
+            print "\nApache mod_fastcgid detected, ";       
+            if ( $php_procs_number == 0) {
+                print "although there are no php-cgi proceses running right now.\n";
+            } else {
+                print "so these could be a factor in overall memory usage.\n";
+                print "The largest php-cgi process is using ".$php_proc_highest." MB of memory\n";
+                print "The average php-cgi process is using ".$php_proc_average." MB of memory\n";
+
+                my $average_php_potential_use = $fcgid_max_processes * $php_proc_average;
+                $average_php_potential_use = round($average_php_potential_use);
+                my $average_php_potential_use_pct = round(($average_php_potential_use/$available_mem)*100);
+                print "Going by the average PHP process, you need to account for an additional ".$average_php_potential_use." MB RAM ($average_php_potential_use_pct % of available RAM)\n" ;
+
+                my $highest_php_potential_use = $fcgid_max_processes * $php_proc_highest;
+                $highest_php_potential_use = round($highest_php_potential_use);
+                my $highest_php_potential_use_pct = round(($highest_php_potential_use/$available_mem)*100);
+                print "Going by the largest PHP process, you need to account for an additional ".$highest_php_potential_use." MB RAM ($highest_php_potential_use_pct % of available RAM)\n" ;
+
+           }
+        }
+        
 	print color 'bold white' if ! $NOCOLOR;
 	print "\nGenerating reports...\n";
 	print color 'reset' if ! $NOCOLOR;

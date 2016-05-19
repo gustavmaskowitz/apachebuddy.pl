@@ -213,6 +213,9 @@ sub find_master_value {
 		if ( $_ !~ m/^\s*#/ ) {
 			chomp($_);
 
+			# remove Windows format Carriage Return
+			$_ =~ s/\r//g;
+
 			# we ignore lines that are within a Directory, Location, 
 			# File, or Virtualhost block
 		

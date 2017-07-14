@@ -308,7 +308,13 @@ sub get_memory_usage {
 
 		# pmap -d is used to determine the memory usage for the 
 		# individual processes
-		my $pid_mem_usage = `pmap -d $_ | grep writeable/private | awk \'{ print \$4 }\'`;
+		my $pid_mem_usage;
+		if (-f "/etc/SuSE-release")
+		{
+			$pid_mem_usage = `pmap -d $_ | grep writable-private | awk \'{ print \$1 }\'`;
+		} else {
+			$pid_mem_usage = `pmap -d $_ | grep writeable/private | awk \'{ print \$4 }\'`;
+		}
 		$pid_mem_usage =~ s/K//;
 		chomp($pid_mem_usage);
 
